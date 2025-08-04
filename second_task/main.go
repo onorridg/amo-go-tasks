@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sync"
 )
 
 // Merge принимает два read-only канала и возвращает выходной канал,
@@ -13,9 +14,31 @@ import (
 //
 // Для проверки решения запустите тесты: go test -v
 func Merge(ch1, ch2 <-chan int) <-chan int {
-	// TODO: реализуйте эту функцию
+	out := make(chan int)
 
-	return nil
+	go func() {
+		defer close(out)
+		wg := &sync.WaitGroup{}
+		wg.Add(2)
+
+		go func() {
+			defer wg.Done()
+			for v := range ch1 {
+				out <- v
+			}
+		}()
+
+		go func() {
+			defer wg.Done()
+			for v := range ch2 {
+				out <- v
+			}
+		}()
+
+		wg.Wait()
+
+	}()
+	return out
 }
 
 func main() {
